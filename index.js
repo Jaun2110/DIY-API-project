@@ -7,11 +7,12 @@ const masterKey = "4VGP2DN-6EWM4SJ-N6FGRHV-Z3PR3TT";
 
 app.use(bodyParser.urlencoded({ extended: true }));
 
-//1. GET a random joke
 
-//2. GET a specific joke
 
-//3. GET a jokes by filtering on the joke type
+
+
+
+
 
 //4. POST a new joke
 
@@ -599,3 +600,99 @@ var jokes = [
     jokeType: "Food",
   },
 ];
+// console.log(jokes[1]);
+app.get("/random", (req,res) =>{
+  var getRandomIndex =Math.floor(Math.random() *jokes.length)
+  res.json(jokes[getRandomIndex])
+})
+
+//2. GET a specific joke
+app.get("/jokes/:id", (req, res)=>{
+  const id = parseInt(req.params.id)
+  const foundJoke = jokes.find((joke) => joke.id === id)
+  res.json(foundJoke)
+} )
+
+//3. GET a jokes by filtering on the joke type
+app.get("/filter",(req,res) =>
+{
+  const type = req.query.type
+const fiteredJokes = jokes.filter((joke) => joke.jokeType.toLowerCase() === type.toLowerCase())
+res.json(fiteredJokes)
+})
+
+app.post("/jokes",(req,res) =>{
+  const newJoke ={
+    id: jokes.length + 1,
+    jokeText: req.body.text,
+    jokeType: req.body.type
+  }
+  // add joke to array
+  jokes.push(newJoke)
+  // display this joke in the console
+  console.log(jokes.slice(-1))
+  res.json(newJoke)
+})
+
+// override an existing joke
+app.put("/jokes/:id",(req,res) =>{
+ const id= parseInt(req.params.id)
+  const replaceJoke ={
+    id: id,
+    jokeText: req.body.text,
+    jokeType: req.body.type
+  }
+  // 1 way of accessing the element
+  // jokes[id-1] = replaceJoke
+  // res.json(replaceJoke)
+  // 2nd way
+  const searchIndex = jokes.findIndex((joke) => joke.id === id)
+  jokes[searchIndex] = replaceJoke
+   res.json(replaceJoke)
+
+
+})
+
+// update an existing request
+app.patch("/jokes/:id",(req,res) =>{
+  // convert the id to int
+  const id =parseInt(req.params.id)
+  const jokeToModify= jokes.find((joke) => joke.id === id)
+  // construct the replacement joke
+  const replaceJoke ={
+    id: id,
+    jokeText: req.body.text || jokeToModify.jokeText,
+    jokeType: req.body.type || jokeToModify.jokeType
+  }
+  const jokeIndex = jokes.findIndex((joke) => joke.id === id)
+
+  jokes[jokeIndex] = replaceJoke
+  res.json(replaceJoke)
+}
+)
+
+
+// delete a joke
+app.delete("/jokes/:id",(req,res) =>{
+  const id = parseInt(req.params.id)
+  const searchIndex = jokes.findIndex((joke) => joke.id=== id)
+  if (searchIndex > -1){
+    jokes.splice(searchIndex,1)
+    res.send(200)
+  } else{
+    res.status(404).json(`Joke with id: ${id} not found.No jokes deleted`)
+  }
+})
+
+
+
+app.delete("/all",(req,res)=>{
+  const userKey = req.query.key
+  if(userKey===masterKey){
+    jokes=[]
+    res.status(200).json("All jokes gone!")
+
+  }else{
+    res.status(404).json("No authorisation to delete all jokes")
+  }
+})
